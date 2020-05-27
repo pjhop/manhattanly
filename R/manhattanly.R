@@ -153,9 +153,9 @@ manhattanly.manhattanr <- function(x,
                                    showlegend = FALSE,
                                    showgrid = FALSE,
                                    xlab = NULL,
-                                   ylab = "-log10(p)",
+                                   ylab = "-log10(P)",
                                    title = "Manhattan Plot") {
-
+  
   # x <- manhattanr(gwasResults)
   # x <- manhattanr(kk, annotation1 = "ZSCORE", annotation2 = "EFFECTSIZE")
   # x <- manhattanr(kk, annotation1 = "ZSCORE")
@@ -182,9 +182,9 @@ manhattanly.manhattanr <- function(x,
   # xlab = NULL
   # title = "Manhattan Plot"
   # col = c("#969696", "#252525")
-
+  
   #########
-
+  
   d <- x$data
   pName <- x$pName
   snpName <- x$snpName
@@ -195,13 +195,13 @@ manhattanly.manhattanr <- function(x,
   xlabel <- x$xlabel
   ticks <- x$ticks
   nchr <- x$nchr
-
+  
   if (!is.null(highlight) & is.na(snpName)) stop("You're trying to highlight snps, but havent provided a snp column")
-
+  
   # Initialize plot
   xmax = ceiling(max(d$pos) * 1.03)
   xmin = floor(max(d$pos) * -0.03)
-
+  
   # If manually specifying chromosome labels, ensure a character vector
   # and number of labels matches number chrs.
   if (!is.null(labelChr)) {
@@ -215,62 +215,62 @@ manhattanly.manhattanr <- function(x,
       warning("If you're trying to specify chromosome labels, labelChr must be a character vector")
     }
   }
-
+  
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   # Initalize plotly
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   p <- plotly::plot_ly()
-
+  
   # Add an axis.
   if (nchr == 1) {
     #If single chromosome, ticks and labels automatic.
     p %<>% plotly::layout(p,
-                  title = title,
-                  xaxis = list(
-                    title = if(!is.null(xlab)) xlab else xlabel,
-                    # title = "ll",
-                    showgrid = showgrid,
-                    range = c(xmin, xmax)
-                  ),
-                  yaxis = list(
-                    title = ylab)#,
-                    #range = c(0,ceiling(max(d$logp)))
-                  #)
+                          title = title,
+                          xaxis = list(
+                            title = if(!is.null(xlab)) xlab else xlabel,
+                            # title = "ll",
+                            showgrid = showgrid,
+                            range = c(xmin, xmax)
+                          ),
+                          yaxis = list(
+                            title = ylab)#,
+                          #range = c(0,ceiling(max(d$logp)))
+                          #)
     )
   } else {
     # if multiple chrs, use the ticks and labels you created above.
     p %<>% plotly::layout(p,
-                title = title,
-                xaxis = list(
-                  title = if(!is.null(xlab)) xlab else "Chromosome",
-                  # title = "ll",
-                  showgrid = showgrid,
-                  range = c(xmin, xmax),
-                  autotick = FALSE,
-                  tickmode = "array",
-                  tickvals = ticks,
-                  ticktext = labs,
-                  ticks = "outside"
-                ),
-                yaxis = list(
-                  title = ylab)#,
-                  #range = c(0,ceiling(max(d$logp)))
-                #)
+                          title = title,
+                          xaxis = list(
+                            title = if(!is.null(xlab)) xlab else "Chromosome",
+                            # title = "ll",
+                            showgrid = showgrid,
+                            range = c(xmin, xmax),
+                            autotick = FALSE,
+                            tickmode = "array",
+                            tickvals = ticks,
+                            ticktext = labs,
+                            ticks = "outside"
+                          ),
+                          yaxis = list(
+                            title = ylab)#,
+                          #range = c(0,ceiling(max(d$logp)))
+                          #)
     )
   }
-
+  
   # Create a vector of alternatiting colors
   col <- rep(col, max(d$CHR))
-
+  
   # Add points to the plot
   if (nchr==1) {
-
+    
     # paste(if (!is.na(snpName)) paste0(snpName,": ",d[[snpName]],"<br>"),
     # if (!is.na(geneName)) paste0(geneName,": ",d[[geneName]],"<br>"),
     # if (!is.na(annotation1Name)) paste0(annotation1Name,": ",d[[annotation1Name]],"<br>")
     # if (!is.na(annotation2Name)) paste0(annotation2Name,": ",d[[annotation2Name]],"<br>")
-
+    
     TEXT <- paste(if (!is.na(snpName)) paste0(snpName,": ",d[[snpName]]),
                   if (!is.na(geneName)) paste0(geneName,": ",d[[geneName]]),
                   if (!is.na(annotation1Name)) paste0(annotation1Name,": ",d[[annotation1Name]]),
@@ -278,6 +278,7 @@ manhattanly.manhattanr <- function(x,
     
     if (is.na(snpName) && is.na(geneName) && is.na(annotation1Name) && is.na(annotation2Name)) {
       p %<>% plotly::add_trace(x = d$pos, y = d$logp,
+                               customdata = d$unit,
                                type = "scatter",
                                mode = "markers",
                                # text = TEXT,
@@ -288,6 +289,7 @@ manhattanly.manhattanr <- function(x,
     } else {
       
       p %<>% plotly::add_trace(x = d$pos, y = d$logp,
+                               customdata = d$unit,
                                type = "scatter",
                                mode = "markers",
                                text = TEXT,
@@ -296,34 +298,38 @@ manhattanly.manhattanr <- function(x,
                                              size = point_size),
                                name = paste0("chr", unique(d$CHR)))         
     }
-
+    
   } else {
-
+    
     icol <- 1
-
+    
     for(i in unique(d$index)) {
-
+      
       tmp <- d[d$index == unique(d$index)[i], ]
-
+      
       TEXT <- paste(if (!is.na(snpName)) paste0(snpName,": ", tmp[[snpName]]),
                     if (!is.na(geneName)) paste0(geneName,": ", tmp[[geneName]]),
                     if (!is.na(annotation1Name)) paste0(annotation1Name,": ", tmp[[annotation1Name]]),
                     if (!is.na(annotation2Name)) paste0(annotation2Name,": ", tmp[[annotation2Name]]),
                     sep = "<br>")
-
+      
       # get chromosome name for labeling
       chromo <- unique(tmp[which(tmp$index==i),"CHR"])
       
       if (is.na(snpName) && is.na(geneName) && is.na(annotation1Name) && is.na(annotation2Name)) {
-      p %<>% plotly::add_trace(x = tmp$pos, y = tmp$logp, type = "scatter",
-                       mode = "markers", 
-                       showlegend = showlegend,
-                       marker = list(color = col[icol],
-                                     size = point_size),
-                       name = paste0("chr",chromo)) 
+        p %<>% plotly::add_trace(x = tmp$pos, y = tmp$logp, 
+                                 customdata = tmp$unit,
+                                 type = "scatter",
+                                 mode = "markers", 
+                                 showlegend = showlegend,
+                                 marker = list(color = col[icol],
+                                               size = point_size),
+                                 name = paste0("chr",chromo)) 
       } else {
         
-        p %<>% plotly::add_trace(x = tmp$pos, y = tmp$logp, type = "scatter",
+        p %<>% plotly::add_trace(x = tmp$pos, y = tmp$logp, 
+                                 customdata = tmp$unit,
+                                 type = "scatter",
                                  mode = "markers", 
                                  showlegend = showlegend,
                                  text = TEXT,
@@ -334,45 +340,45 @@ manhattanly.manhattanr <- function(x,
       
       icol = icol + 1
     }
-
+    
   }
-
+  
   if (suggestiveline & genomewideline) {p %<>% plotly::layout(p,
-                                     shapes = list(
-                                       list(type = "line",
-                                            fillcolor = suggestiveline_color,
-                                            line = list(color = suggestiveline_color,
-                                                        width = suggestiveline_width),
-                                            x0 = xmin, x1 = xmax, xref = "x",
-                                            y0 = suggestiveline, y1 = suggestiveline, yref = "y"),
-                                       list(type = "line",
-                                            fillcolor = genomewideline_color,
-                                            line = list(color = genomewideline_color,
-                                                        width = genomewideline_width),
-                                            x0 = xmin, x1 = xmax, xref = "x",
-                                            y0 = genomewideline, y1 = genomewideline, yref = "y")
-                                     ))}
-
+                                                              shapes = list(
+                                                                list(type = "line",
+                                                                     fillcolor = suggestiveline_color,
+                                                                     line = list(color = suggestiveline_color,
+                                                                                 width = suggestiveline_width),
+                                                                     x0 = xmin, x1 = xmax, xref = "x",
+                                                                     y0 = suggestiveline, y1 = suggestiveline, yref = "y"),
+                                                                list(type = "line",
+                                                                     fillcolor = genomewideline_color,
+                                                                     line = list(color = genomewideline_color,
+                                                                                 width = genomewideline_width),
+                                                                     x0 = xmin, x1 = xmax, xref = "x",
+                                                                     y0 = genomewideline, y1 = genomewideline, yref = "y")
+                                                              ))}
+  
   if (suggestiveline & !(genomewideline)) {p %<>% plotly::layout(p,
-                                                      shapes = list(
-                                                        list(type = "line",
-                                                             fillcolor = suggestiveline_color,
-                                                             line = list(color = suggestiveline_color,
-                                                                         width = suggestiveline_width),
-                                                             x0 = xmin, x1 = xmax, xref = "x",
-                                                             y0 = suggestiveline, y1 = suggestiveline, yref = "y")
-                                                      ))}
-
+                                                                 shapes = list(
+                                                                   list(type = "line",
+                                                                        fillcolor = suggestiveline_color,
+                                                                        line = list(color = suggestiveline_color,
+                                                                                    width = suggestiveline_width),
+                                                                        x0 = xmin, x1 = xmax, xref = "x",
+                                                                        y0 = suggestiveline, y1 = suggestiveline, yref = "y")
+                                                                 ))}
+  
   if (!(suggestiveline) & genomewideline) {p %<>% plotly::layout(p,
-                                                      shapes = list(
-                                                        list(type = "line",
-                                                             fillcolor = genomewideline_color,
-                                                             line = list(color = genomewideline_color,
-                                                                         width = genomewideline_width),
-                                                             x0 = xmin, x1 = xmax, xref = "x",
-                                                             y0 = genomewideline, y1 = genomewideline, yref = "y")
-                                                      ))}
-
+                                                                 shapes = list(
+                                                                   list(type = "line",
+                                                                        fillcolor = genomewideline_color,
+                                                                        line = list(color = genomewideline_color,
+                                                                                    width = genomewideline_width),
+                                                                        x0 = xmin, x1 = xmax, xref = "x",
+                                                                        y0 = genomewideline, y1 = genomewideline, yref = "y")
+                                                                 ))}
+  
   # Highlight snps from a character vector
   if (!is.na(snpName)) {
     if (!is.null(highlight)) {
@@ -390,6 +396,7 @@ manhattanly.manhattanr <- function(x,
                       if (!is.na(annotation2Name)) paste0(annotation2Name,": ",d.highlight[[annotation2Name]]), sep = "<br>")
         
         p %<>% plotly::add_trace(x = d$pos, y = d$logp,
+                                 customdata = d$unit,
                                  type = "scatter",
                                  mode = "markers",
                                  text = TEXT,
@@ -416,6 +423,7 @@ manhattanly.manhattanr <- function(x,
           chromo <- unique(tmp[which(tmp$index==i),"CHR"])
           p %<>% plotly::add_trace(x = tmp$pos, 
                                    y = tmp$logp, 
+                                   customdata = tmp$unit,
                                    type = "scatter",
                                    mode = "markers", 
                                    text = TEXT,
